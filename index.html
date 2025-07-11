@@ -9,6 +9,17 @@
         @font-face { font-family: 'bulangni'; src: url('') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
         :root { --screen-width: 350px; --screen-height: 650px; --secondary-bg: #ffffff; --border-color: #e0e0e0; --text-primary: #1f1f1f; --text-secondary: #8a8a8a; --accent-color: #007bff; }
         html { height: 100%; overflow: hidden; }
+    <!-- PWA manifest 链接 -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- iOS PWA 支持 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EPhone">
+    <link rel="apple-touch-icon" href="https://files.catbox.moe/q6z5fc.jpeg">
+
+    <!-- 主题颜色 -->
+    <meta name="theme-color" content="#007bff">
 
 /* ▼▼▼ 请用下面这【一整块】全新的代码，替换掉所有旧的 body, phone-frame, phone-screen 等样式 ▼▼▼ */
 
@@ -3428,6 +3439,79 @@ body {
 
     </style>
 </head>
+<!-- 添加安装PWA按钮 -->
+<button id="install-btn" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: #4cd964;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: pulse 2s infinite;
+    display: none;
+">+</button>
+
+<script>
+    // 注册Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker 注册成功: ', registration.scope);
+                })
+                .catch(error => {
+                    console.log('Service Worker 注册失败: ', error);
+                });
+        });
+    }
+    
+    // 处理PWA安装提示
+    let deferredPrompt;
+    const installButton = document.getElementById('install-btn');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // 阻止默认安装提示
+        e.preventDefault();
+        // 保存事件以便稍后触发
+        deferredPrompt = e;
+        // 显示安装按钮
+        installButton.style.display = 'flex';
+    });
+    
+    installButton.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // 显示安装提示
+            deferredPrompt.prompt();
+            // 等待用户响应
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('用户接受了安装提示');
+            } else {
+                console.log('用户拒绝了安装提示');
+            }
+            // 清除保存的提示事件
+            deferredPrompt = null;
+            // 隐藏安装按钮
+            installButton.style.display = 'none';
+        }
+    });
+    
+    // 监听应用安装事件
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA 已安装');
+        installButton.style.display = 'none';
+    });
+</script>
 <body>
         <div id="phone-screen">
             <div id="status-bar">
